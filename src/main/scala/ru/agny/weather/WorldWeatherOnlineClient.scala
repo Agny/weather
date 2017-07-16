@@ -3,7 +3,7 @@ package ru.agny.weather
 import scala.concurrent.Future
 
 object WorldWeatherOnlineClient extends DataProvider {
-  private val config = ConfigLoader.load("world_weather_online")
+  private val config = ConfigLoader.load("world_weather_online.json")
 
   override def get(request: Request): Future[StatData] = {
     lookInCache(request).map {

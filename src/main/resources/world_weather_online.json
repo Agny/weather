@@ -1,0 +1,8 @@
+{
+  "apiUrl": "http://api.worldweatheronline.com/premium/v1/weather.ashx",
+  "query": {
+    "city": "q",
+    "from": "date",
+    "to": "enddate"
+  }
+}
