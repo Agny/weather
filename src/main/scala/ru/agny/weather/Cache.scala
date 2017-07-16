@@ -1,6 +1,6 @@
 package ru.agny.weather
 
-import ru.agny.weather.UnitType.{DateStamp, Location}
+import ru.agny.weather.UserType.{DateStamp, Location}
 
 import scala.concurrent.Future
 
