@@ -1,5 +1,5 @@
 package ru.agny.weather
 
-import ru.agny.weather.UserType.{Percent, Celsius}
+import ru.agny.weather.UserType.{DateStamp, Percent, Celsius}
 
-case class HourlyUnit(temperature: Celsius, humidity: Percent, wind: Wind)
+case class HourlyUnit(day: DateStamp, temperature: Celsius, humidity: Percent, wind: Wind)
