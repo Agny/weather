@@ -5,4 +5,6 @@ object UnitType {
   type Percent = Int
   type Kmph = Int
   type Degree = Int
+  type Location = String
+  type DateStamp = Long
 }
