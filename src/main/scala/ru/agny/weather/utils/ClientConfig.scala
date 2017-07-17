@@ -1,6 +1,6 @@
-package ru.agny.weather
+package ru.agny.weather.utils
 
-import ru.agny.weather.UserType.DateString
+import ru.agny.weather.utils.UserType.DateString
 import spray.json.DefaultJsonProtocol
 
 case class ClientConfig(apiUrl: String, query: QueryParamNames)
@@ -10,7 +10,7 @@ case class QueryParamNames(apiKey: String, city: String, from: DateString, to: D
 object ClientConfig extends DefaultJsonProtocol {
 
   private implicit val queryFormat = jsonFormat4(QueryParamNames)
-  implicit val clientFormat = jsonFormat2(ClientConfig.apply)
+  implicit val format = jsonFormat2(ClientConfig.apply)
 
   val default = ClientConfig(
     "http://api.worldweatheronline.com/premium/v1/past-weather.ashx",

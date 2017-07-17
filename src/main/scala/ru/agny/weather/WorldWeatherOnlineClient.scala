@@ -7,7 +7,8 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import ru.agny.weather.UserType.DateStamp
+import ru.agny.weather.utils.{DateFormatter, UserType, ConfigLoader}
+import UserType.DateStamp
 import ru.agny.weather.dto.{WWOData, WorldWeatherOnlineResponse}
 
 import scala.concurrent.Future
@@ -18,8 +19,8 @@ object WorldWeatherOnlineClient extends DataProvider {
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
   import Cache.SimpleCache
   import DateFormatter._
-  import WorldWeatherOnlineResponse._
-  import Error._
+  import WorldWeatherOnlineResponse.wwoResponse
+  import Error.format
 
   private implicit val system = ActorSystem()
   private implicit val materializer = ActorMaterializer()

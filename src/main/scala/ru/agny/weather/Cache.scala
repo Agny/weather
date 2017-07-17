@@ -1,6 +1,6 @@
 package ru.agny.weather
 
-import ru.agny.weather.UserType.{DateStamp, Location}
+import ru.agny.weather.utils.UserType.{DateStamp, Location}
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
