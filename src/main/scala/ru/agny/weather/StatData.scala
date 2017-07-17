@@ -1,6 +1,6 @@
 package ru.agny.weather
 
-case class StatData(data: Vector[HourlyUnit])
+case class StatData(data: Vector[DayUnit])
 
 object StatData {
   def standardDeviation = ???

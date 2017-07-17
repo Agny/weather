@@ -1,6 +1,7 @@
 {
-  "apiUrl": "http://api.worldweatheronline.com/premium/v1/weather.ashx",
+  "apiUrl": "http://api.worldweatheronline.com/premium/v1/past-weather.ashx",
   "query": {
+    "apiKey": "key",
     "city": "q",
     "from": "date",
     "to": "enddate"
