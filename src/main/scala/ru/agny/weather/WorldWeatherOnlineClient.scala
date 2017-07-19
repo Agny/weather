@@ -26,7 +26,7 @@ object WorldWeatherOnlineClient extends DataProvider {
 
   private val config = ConfigLoader.load("world_weather_online.json")
 
-  override def get(request: Request): Future[Either[Error, StatData]] = {
+  override def get(request: ApiRequest): Future[Either[Error, StatData]] = {
     implicit val format = new SimpleDateFormat("yyyy-MM-dd")
     lookInCache(request).map {
       case Some(v) => Future(Right(v))
@@ -39,14 +39,14 @@ object WorldWeatherOnlineClient extends DataProvider {
     }.flatten
   }
 
-  private def requestData(request: Request): Future[Either[Error, WorldWeatherOnlineResponse]] = {
+  private def requestData(request: ApiRequest): Future[Either[Error, WorldWeatherOnlineResponse]] = {
     for {
       response <- Http().singleRequest(HttpRequest(uri = buildUrl(request)))
       units <- unmarshall(response)
     } yield units
   }
 
-  private def buildUrl(r: Request): String = {
+  private def buildUrl(r: ApiRequest): String = {
     s"${config.apiUrl}" +
       s"?${config.query.apiKey}=${r.apiKey}" +
       s"&${config.query.city}=${r.loc}" +
@@ -62,7 +62,7 @@ object WorldWeatherOnlineClient extends DataProvider {
     }
   }
 
-  private def lookInCache(r: Request)(implicit cache: Cache, format: DateFormat): Future[Option[StatData]] = {
+  private def lookInCache(r: ApiRequest)(implicit cache: Cache, format: DateFormat): Future[Option[StatData]] = {
     val range = stepByDay(r.from, r.to).map(CacheKey(r.loc, _))
     Future.sequence(range.map(cache.get)).map(x =>
       if (isAllKeysExists(x)) Some(StatData(x.flatten))
@@ -72,7 +72,7 @@ object WorldWeatherOnlineClient extends DataProvider {
 
   private def isAllKeysExists(v: Vector[Option[DayUnit]]): Boolean = !v.contains(None)
 
-  private def persistInCache(r: Request, data: WWOData)(implicit cache: Cache, format: DateFormat): Future[Boolean] = {
+  private def persistInCache(r: ApiRequest, data: WWOData)(implicit cache: Cache, format: DateFormat): Future[Boolean] = {
     val putResult = data.weather.map(x => (CacheKey(r.loc, x.date), x.toDayUnit)).map(kv => cache.put(kv._1, kv._2))
     Future.sequence(putResult).map(!_.contains(false))
   }
