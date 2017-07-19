@@ -7,6 +7,6 @@ object UserType {
   type Degree = Int
   type Location = String
   type DateStamp = Long
-  type DateString = String
+  type DateString = String //yyyy-MM-dd
   type HourString = String
 }

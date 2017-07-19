@@ -7,8 +7,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import ru.agny.weather.utils.{DateFormatter, UserType, ConfigLoader}
-import UserType.DateStamp
+import ru.agny.weather.utils.{DateFormatter, ConfigLoader}
 import ru.agny.weather.dto.{WWOData, WorldWeatherOnlineResponse}
 
 import scala.concurrent.Future
@@ -64,12 +63,17 @@ object WorldWeatherOnlineClient extends DataProvider {
   }
 
   private def lookInCache(r: Request)(implicit cache: Cache, format: DateFormat): Future[Option[StatData]] = {
-    cache.get(CacheKey(r.loc, r.from, r.to)).map(_.map(StatData(_)))
+    val range = stepByDay(r.from, r.to).map(CacheKey(r.loc, _))
+    Future.sequence(range.map(cache.get)).map(x =>
+      if (isAllKeysExists(x)) Some(StatData(x.flatten))
+      else None
+    )
   }
 
+  private def isAllKeysExists(v: Vector[Option[DayUnit]]): Boolean = !v.contains(None)
+
   private def persistInCache(r: Request, data: WWOData)(implicit cache: Cache, format: DateFormat): Future[Boolean] = {
-    val min = data.weather.minBy[DateStamp](_.date)
-    val max = data.weather.maxBy[DateStamp](_.date)
-    cache.put(CacheKey(r.loc, min.date, max.date), data.weather.map(_.toDayUnit))
+    val putResult = data.weather.map(x => (CacheKey(r.loc, x.date), x.toDayUnit)).map(kv => cache.put(kv._1, kv._2))
+    Future.sequence(putResult).map(!_.contains(false))
   }
 }
