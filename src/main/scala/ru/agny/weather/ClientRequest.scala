@@ -1,16 +1,21 @@
 package ru.agny.weather
 
+import ru.agny.weather.utils.DateFormatter
 import ru.agny.weather.utils.UserType.{Location, DateString}
 import spray.json.{JsString, JsValue, RootJsonFormat, DefaultJsonProtocol}
 
 case class ClientRequest(apiKey: String, base: RequestData, compareWith: Option[RequestData], periodType: PeriodType) {
-  def toApiRequests: (ApiRequest, Option[ApiRequest]) = (
-    ApiRequest(apiKey, base.loc, base.from, base.to),
-    compareWith.map(x => ApiRequest(apiKey, x.loc, x.from, x.to))
-    )
+
+  import DateFormatter._
+
+  def toApiRequests: (ApiRequest, Option[ApiRequest]) = {
+    implicit val format = createFormatter
+    (ApiRequest(apiKey, base.city, base.startDate, base.endDate),
+      compareWith.map(x => ApiRequest(apiKey, x.city, x.startDate, x.endDate)))
+  }
 }
 
-case class RequestData(loc: Location, from: DateString, to: DateString)
+case class RequestData(city: Location, startDate: DateString, endDate: DateString)
 
 sealed trait PeriodType
 object PeriodType {
