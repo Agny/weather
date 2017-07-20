@@ -26,14 +26,14 @@ object WorldWeatherOnlineClient extends DataProvider {
 
   private val config = ConfigLoader.load("world_weather_online.json")
 
-  override def get(request: ApiRequest): Future[Either[Error, StatData]] = {
-    implicit val format = new SimpleDateFormat("yyyy-MM-dd")
+  override def get(request: ApiRequest): Future[Either[Error, UnprocessedData]] = {
+    implicit val format = createFormatter
     lookInCache(request).map {
       case Some(v) => Future(Right(v))
       case None => requestData(request).map {
         case Right(v) =>
           persistInCache(request, v.data)
-          Right(v.data.toStatData)
+          Right(v.data.toDataHolder)
         case Left(v) => Left(v)
       }
     }.flatten
@@ -62,10 +62,10 @@ object WorldWeatherOnlineClient extends DataProvider {
     }
   }
 
-  private def lookInCache(r: ApiRequest)(implicit cache: Cache, format: DateFormat): Future[Option[StatData]] = {
+  private def lookInCache(r: ApiRequest)(implicit cache: Cache, format: DateFormat): Future[Option[UnprocessedData]] = {
     val range = stepByDay(r.from, r.to).map(CacheKey(r.loc, _))
     Future.sequence(range.map(cache.get)).map(x =>
-      if (isAllKeysExists(x)) Some(StatData(x.flatten))
+      if (isAllKeysExists(x)) Some(UnprocessedData(x.flatten))
       else None
     )
   }
