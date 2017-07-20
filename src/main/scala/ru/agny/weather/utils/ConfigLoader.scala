@@ -1,8 +1,6 @@
 package ru.agny.weather.utils
 
-import java.io.File
-
-import scala.io.Source._
+import scala.io.Source
 
 object ConfigLoader {
 
@@ -11,18 +9,18 @@ object ConfigLoader {
   import AppConfig.format
 
   def loadClient(apiName: String): ClientConfig = {
-    val configFile = new File(getClass.getClassLoader.getResource(apiName).toURI)
-    if (configFile.isFile) {
-      JsonParser(fromFile(configFile).mkString).convertTo[ClientConfig]
+    val configFile = Source.fromResource(apiName)
+    if (configFile.nonEmpty) {
+      JsonParser(configFile.mkString).convertTo[ClientConfig]
     } else {
       ClientConfig.default
     }
   }
 
   def loadApp(commons: String): AppConfig = {
-    val configFile = new File(getClass.getClassLoader.getResource(commons).toURI)
-    if (configFile.isFile) {
-      JsonParser(fromFile(configFile).mkString).convertTo[AppConfig]
+    val configFile = Source.fromResource(commons)
+    if (configFile.nonEmpty) {
+      JsonParser(configFile.mkString).convertTo[AppConfig]
     } else {
       AppConfig.default
     }
