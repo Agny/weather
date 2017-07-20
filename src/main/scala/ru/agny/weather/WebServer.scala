@@ -61,7 +61,9 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
     StdIn.readLine()
     bindingFuture
       .flatMap(_.unbind())
-      .onComplete(_ => system.terminate())
+      .onComplete(_ => {
+        system.terminate().onComplete(_ => System.exit(0))
+      })
   }
 
   private def aggregateWeatherResponses(req: ClientRequest) = {
