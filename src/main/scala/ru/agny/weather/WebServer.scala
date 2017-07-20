@@ -44,13 +44,10 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
           entity(as[ClientRequest]) { req => {
             val (base, toCompare) = req.toApiRequests
             val responses = Future.sequence(List(weatherProvider.get(base), toCompare.map(weatherProvider.get).getOrElse(Future.successful(Left(Error("Empty result"))))))
-            val result = responses.map {
-              case Right(v1) :: Right(v2) :: Nil => Right(DataToCompare(ProcessedData(v1), ProcessedData(v2)))
-              case xs@List(_) if xs.exists(_.isRight) => xs.find(_.isRight).get.map(ProcessedData(_))
-              case _ => Left(Error("Nothing to show"))
-            }
-            onSuccess(result) { result =>
-              complete(result)
+            onSuccess(responses) {
+              case Right(v1) :: Right(v2) :: Nil => complete(Right(DataToCompare(ProcessedData(v1), ProcessedData(v2))))
+              case xs@List(_) if xs.exists(_.isRight) => complete(xs.find(_.isRight).get.map(ProcessedData(_)))
+              case _ => complete(Left(Error("Nothing to show")))
             }
           }
           }
