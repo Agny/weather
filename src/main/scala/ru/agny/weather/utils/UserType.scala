@@ -1,9 +1,9 @@
 package ru.agny.weather.utils
 
 object UserType {
-  type Celsius = Int
-  type Percent = Int
-  type Kmph = Int
+  type Celsius = Double
+  type Percent = Double
+  type Kmph = Double
   type Direction = String
   type Location = String
   type DateStamp = Long
