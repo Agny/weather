@@ -8,21 +8,31 @@ object ConfigLoader {
   import ClientConfig.format
   import AppConfig.format
 
+  private val outsideJar = "./"
+
   def loadClient(apiName: String): ClientConfig = {
-    val configFile = Source.fromResource(apiName)
-    if (configFile.nonEmpty) {
-      JsonParser(configFile.mkString).convertTo[ClientConfig]
-    } else {
-      ClientConfig.default
+    try {
+      val configFile = Source.fromResource(outsideJar + apiName)
+      if (configFile.nonEmpty) {
+        JsonParser(configFile.mkString).convertTo[ClientConfig]
+      } else {
+        ClientConfig.default
+      }
+    } catch {
+      case _: Throwable => ClientConfig.default
     }
   }
 
   def loadApp(commons: String): AppConfig = {
-    val configFile = Source.fromResource(commons)
-    if (configFile.nonEmpty) {
-      JsonParser(configFile.mkString).convertTo[AppConfig]
-    } else {
-      AppConfig.default
+    try {
+      val configFile = Source.fromResource(outsideJar + commons)
+      if (configFile.nonEmpty) {
+        JsonParser(configFile.mkString).convertTo[AppConfig]
+      } else {
+        AppConfig.default
+      }
+    } catch {
+      case _: Throwable => AppConfig.default
     }
   }
 }
