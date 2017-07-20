@@ -1,6 +1,6 @@
 package ru.agny.weather
 
-import ru.agny.weather.utils.UserType.{DateStamp, Location}
+import ru.agny.weather.utils.UserType.{Days, Location}
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
@@ -12,7 +12,7 @@ trait Cache {
   def get(key: CacheKey): Future[Option[DayUnit]]
 }
 
-case class CacheKey(loc: Location, date: DateStamp)
+case class CacheKey(loc: Location, date: Days)
 
 object Cache {
 

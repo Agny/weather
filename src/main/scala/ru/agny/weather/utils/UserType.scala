@@ -6,7 +6,10 @@ object UserType {
   type Kmph = Double
   type Direction = String
   type Location = String
-  type DateStamp = Long
+  type Days = Long
+  //EpochDay
   type DateString = String //yyyy-MM-dd
+  type Hours = Long
+  //EpochDay
   type HourString = String
 }
