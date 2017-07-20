@@ -18,14 +18,13 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
   import UnprocessedData.format
   import DataToCompare.format
 
+  implicit val system = ActorSystem("my-system")
+  implicit val materializer = ActorMaterializer()
+  implicit val executionContext = system.dispatcher
+
+  val weatherProvider: DataProvider = WorldWeatherOnlineClient
+
   def main(args: Array[String]) {
-
-    implicit val system = ActorSystem("my-system")
-    implicit val materializer = ActorMaterializer()
-    implicit val executionContext = system.dispatcher
-
-    val weatherProvider: DataProvider = WorldWeatherOnlineClient
-
     val api = cors() {
       path("api" / "raw") {
         post {
@@ -42,12 +41,11 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
       path("api" / "processed") {
         post {
           entity(as[ClientRequest]) { req => {
-            val (base, toCompare) = req.toApiRequests
-            val responses = Future.sequence(List(weatherProvider.get(base), toCompare.map(weatherProvider.get).getOrElse(Future.successful(Left(Error("Empty result"))))))
+            val responses = aggregateWeatherResponses(req)
             onSuccess(responses) {
               case Right(v1) :: Right(v2) :: Nil => complete(Right(DataToCompare(ProcessedData(v1), ProcessedData(v2))))
-              case xs@List(_) if xs.exists(_.isRight) => complete(xs.find(_.isRight).get.map(ProcessedData(_)))
-              case _ => complete(Left(Error("Nothing to show")))
+              case xs@h :: t if xs.exists(_.isRight) => complete(xs.find(_.isRight).get.map(ProcessedData(_)))
+              case m@_ => complete(Left(Error(m.toString)))
             }
           }
           }
@@ -62,5 +60,11 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
     bindingFuture
       .flatMap(_.unbind())
       .onComplete(_ => system.terminate())
+  }
+
+  private def aggregateWeatherResponses(req: ClientRequest) = {
+    val (base, toCompare) = req.toApiRequests
+    val ifCompareRequested = toCompare.map(weatherProvider.get).getOrElse(Future.successful(Left(Error("Empty result"))))
+    Future.sequence(List(weatherProvider.get(base), ifCompareRequested))
   }
 }

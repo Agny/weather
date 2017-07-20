@@ -1,7 +1,5 @@
 package ru.agny.weather
 
-import java.text.{DateFormat, SimpleDateFormat}
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
@@ -27,7 +25,6 @@ object WorldWeatherOnlineClient extends DataProvider {
   private val config = ConfigLoader.load("world_weather_online.json")
 
   override def get(request: ApiRequest): Future[Either[Error, UnprocessedData]] = {
-    implicit val format = createFormatter
     lookInCache(request).map {
       case Some(v) => Future(Right(v))
       case None => requestData(request).map {
@@ -36,24 +33,29 @@ object WorldWeatherOnlineClient extends DataProvider {
           Right(v.data.toDataHolder)
         case Left(v) => Left(v)
       }
-    }.flatten
+    }.flatten.map(applyPeriodFilter(_, request.periodType))
   }
 
   private def requestData(request: ApiRequest): Future[Either[Error, WorldWeatherOnlineResponse]] = {
-    for {
-      response <- Http().singleRequest(HttpRequest(uri = buildUrl(request)))
-      units <- unmarshall(response)
-    } yield units
+    if (request.isValid) {
+      for {
+        response <- Http().singleRequest(HttpRequest(uri = buildUri(request)))
+        units <- unmarshall(response)
+      } yield units
+    } else {
+      Future.successful(Left(Error(s"Request is incorrect: $request")))
+    }
   }
 
-  private def buildUrl(r: ApiRequest): String = {
-    s"${config.apiUrl}" +
-      s"?${config.query.apiKey}=${r.apiKey}" +
-      s"&${config.query.city}=${r.loc}" +
-      s"&${config.query.from}=${r.from}" +
-      s"&${config.query.to}=${r.to}" +
-      "&format=json" +
-      "&tp=1"
+  private def buildUri(r: ApiRequest): Uri = {
+    val query = Map(
+      config.query.apiKey -> r.apiKey,
+      config.query.city -> r.loc,
+      config.query.from -> r.from,
+      config.query.to -> r.to,
+      "format" -> "json",
+      "tp" -> "1")
+    Uri(config.apiUrl).withQuery(Uri.Query(query))
   }
 
   private def unmarshall(response: HttpResponse) = {
@@ -62,8 +64,8 @@ object WorldWeatherOnlineClient extends DataProvider {
     }
   }
 
-  private def lookInCache(r: ApiRequest)(implicit cache: Cache, format: DateFormat): Future[Option[UnprocessedData]] = {
-    val range = stepByDay(r.from, r.to).map(CacheKey(r.loc.toUpperCase, _))
+  private def lookInCache(r: ApiRequest)(implicit cache: Cache): Future[Option[UnprocessedData]] = {
+    val range = stepByDay(dateToDays(r.from), dateToDays(r.to)).map(CacheKey(r.loc.toUpperCase, _))
     Future.sequence(range.map(cache.get)).map(x =>
       if (isAllKeysExists(x)) Some(UnprocessedData(x.flatten))
       else None
@@ -72,8 +74,13 @@ object WorldWeatherOnlineClient extends DataProvider {
 
   private def isAllKeysExists(v: Vector[Option[DayUnit]]): Boolean = !v.contains(None)
 
-  private def persistInCache(r: ApiRequest, data: WWOData)(implicit cache: Cache, format: DateFormat): Future[Boolean] = {
-    val putResult = data.weather.map(x => (CacheKey(r.loc.toUpperCase, x.date), x.toDayUnit)).map(kv => cache.put(kv._1, kv._2))
+  private def persistInCache(r: ApiRequest, data: WWOData)(implicit cache: Cache): Future[Boolean] = {
+    val putResult = data.weather.map(x => (CacheKey(r.loc.toUpperCase, dateToDays(x.date)), x.toDayUnit)).map(kv => cache.put(kv._1, kv._2))
     Future.sequence(putResult).map(!_.contains(false))
+  }
+
+  private def applyPeriodFilter(value: Either[Error, UnprocessedData], period: PeriodType) = value match {
+    case Right(v) => Right(v.byPeriod(period))
+    case Left(v) => Left(v)
   }
 }
