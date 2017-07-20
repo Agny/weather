@@ -63,7 +63,7 @@ object WorldWeatherOnlineClient extends DataProvider {
   }
 
   private def lookInCache(r: ApiRequest)(implicit cache: Cache, format: DateFormat): Future[Option[UnprocessedData]] = {
-    val range = stepByDay(r.from, r.to).map(CacheKey(r.loc, _))
+    val range = stepByDay(r.from, r.to).map(CacheKey(r.loc.toUpperCase, _))
     Future.sequence(range.map(cache.get)).map(x =>
       if (isAllKeysExists(x)) Some(UnprocessedData(x.flatten))
       else None
@@ -73,7 +73,7 @@ object WorldWeatherOnlineClient extends DataProvider {
   private def isAllKeysExists(v: Vector[Option[DayUnit]]): Boolean = !v.contains(None)
 
   private def persistInCache(r: ApiRequest, data: WWOData)(implicit cache: Cache, format: DateFormat): Future[Boolean] = {
-    val putResult = data.weather.map(x => (CacheKey(r.loc, x.date), x.toDayUnit)).map(kv => cache.put(kv._1, kv._2))
+    val putResult = data.weather.map(x => (CacheKey(r.loc.toUpperCase, x.date), x.toDayUnit)).map(kv => cache.put(kv._1, kv._2))
     Future.sequence(putResult).map(!_.contains(false))
   }
 }
