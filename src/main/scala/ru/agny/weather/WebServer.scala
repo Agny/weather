@@ -5,6 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import ru.agny.weather.utils.ConfigLoader
 import spray.json.DefaultJsonProtocol
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
@@ -22,6 +23,7 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
+  val config = ConfigLoader.loadApp("settings.json")
   val weatherProvider: DataProvider = WorldWeatherOnlineClient
 
   def main(args: Array[String]) {
@@ -53,9 +55,9 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
       }
     }
 
-    val bindingFuture = Http().bindAndHandle(api, "localhost", 8080)
+    val bindingFuture = Http().bindAndHandle(api, config.host, config.port)
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Server online at http://${config.host}:${config.port}/\nPress RETURN to stop...")
     StdIn.readLine()
     bindingFuture
       .flatMap(_.unbind())

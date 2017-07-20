@@ -22,7 +22,7 @@ object WorldWeatherOnlineClient extends DataProvider {
   private implicit val system = ActorSystem()
   private implicit val materializer = ActorMaterializer()
 
-  private val config = ConfigLoader.load("world_weather_online.json")
+  private val config = ConfigLoader.loadClient("world_weather_online.json")
 
   override def get(request: ApiRequest): Future[Either[Error, UnprocessedData]] = {
     lookInCache(request).map {
