@@ -1,0 +1,23 @@
+{
+  "description": "Weather viewer",
+  "name": "weather-client",
+  "dependencies": {
+    "babel-core": "latest",
+    "express": "^4.15.3",
+    "react": "^15.6.1",
+    "react-datepicker": "^0.52.0",
+    "react-dom": "^15.6.1",
+    "react-radio-group": "3.0.2",
+    "react-scripts": "1.0.10",
+    "react-tabs": "^1.1.0",
+    "recharts": "^1.0.0-alpha.2",
+    "recharts-scale": "^0.3.1"
+  },
+  "scripts": {
+    "build": "react-scripts build",
+    "eject": "react-scripts eject",
+    "start": "react-scripts start",
+    "test": "react-scripts test --env=jsdom"
+  },
+  "version": "1.0.0"
+}
